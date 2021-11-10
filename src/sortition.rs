@@ -1,7 +1,6 @@
 //use std::collections::binary_heap;
 
 use crate::binomial;
-use crate::binomial::Binomial;
 use rug::integer::Order;
 use rug::{Float, Integer};
 //use sha2::Sha512;
@@ -42,10 +41,9 @@ pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: &[u8
 }
 
 pub fn sortition_binomial_cdf_walk(n: f64, p: f64, ratio: f64, money: u64) -> u64 {
-    let dist: Binomial = Binomial::new(n, p);
     for j in 0..money {
         // Get the cdf
-        let boundary: f64 = binomial::cdf(&dist, j as f64);
+        let boundary: f64 = binomial::cdf(n, p, j as f64);
 
         // Found the correct boundary, break
         if ratio <= boundary {

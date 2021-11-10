@@ -8,12 +8,8 @@ fn raise_domain_error(function: &str, message: &str, val: f64) {
     panic!("{}:{}:{:?}", function, message, val);
 }
 
-fn isfinite(_n: &f64) -> bool {
-    true
-}
-
 fn check_n(function: &str, n: f64) -> bool {
-    if n < 0.0 || !isfinite(&n) {
+    if n < 0.0 || n.is_infinite() {
         raise_domain_error(
             function,
             "Number of Trials argument is %1%, but must be >= 0 !",
@@ -25,7 +21,7 @@ fn check_n(function: &str, n: f64) -> bool {
 }
 
 fn check_success_fraction(function: &str, p: f64) -> bool {
-    if p < 0.0 || p > 1.0 || !isfinite(&p) {
+    if p < 0.0 || p > 1.0 || p.is_infinite() {
         raise_domain_error(
             function,
             "Success fraction argument is %1%, but must be >= 0 and <= 1 !",
@@ -44,7 +40,7 @@ fn check_dist_and_k(function: &str, n: f64, p: f64, k: f64) -> bool {
     if check_dist(function, n, p) == false {
         return false;
     }
-    if k < 0.0 || !isfinite(&k) {
+    if k < 0.0 || k.is_infinite() {
         raise_domain_error(
             function,
             "Number of Successes argument is %1%, but must be >= 0 !",
@@ -79,10 +75,7 @@ fn check_dist_and_k(function: &str, n: f64, p: f64, k: f64) -> bool {
 /// according to the formula:
 /// P = I[1-p]( n-k, k+1).
 ///   = 1 - I[p](k + 1, n - k)
-pub fn cdf(dist: &Binomial, k: f64) -> f64 {
-    let n: f64 = dist.trials();
-    let p: f64 = dist.success_fraction();
-
+pub fn cdf(n: f64, p: f64, k: f64) -> f64 {
     // Panics if something's wrong
     check_dist_and_k(
         "boost::math::cdf(binomial_distribution<%1%> const&, %1%)",
@@ -101,26 +94,4 @@ pub fn cdf(dist: &Binomial, k: f64) -> f64 {
     }
 
     return beta_inc(k + 1.0, n - k, p);
-}
-
-#[derive(Debug)]
-pub struct Binomial {
-    m_n: f64, // FIXME: should be int?
-    m_p: f64, // success_fraction
-}
-
-impl Binomial {
-    pub fn new(n: f64, p: f64) -> Binomial {
-        // Check will panic if checks fail
-        check_dist("binomial_distribution", n, p);
-        Binomial { m_n: n, m_p: p }
-    }
-
-    pub fn success_fraction(&self) -> f64 {
-        self.m_p
-    }
-
-    pub fn trials(&self) -> f64 {
-        self.m_n
-    }
 }
