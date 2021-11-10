@@ -1,105 +1,54 @@
-//extern crate num;
-use num::{FromPrimitive, ToPrimitive};
 use statrs::function::beta::beta_inc;
-
-// Error handling
-// https://www.boost.org/doc/libs/1_74_0/libs/math/doc/html/math_toolkit/pol_ref/error_handling_policies.html
-#[derive(Debug)]
-// FIXME: this is a complete module
-enum ErrorPolicy {
-    ThrowOnError, // throw an exception.
-                  //ErrNoOnError, // set ::errno & return 0, NaN, infinity or best guess.
-                  //IgnoreError, // return 0, NaN, infinity or best guess.
-                  //UserError,    // call a user-defined error handler.
-}
 
 // Equivalent of policies::raise_domain_error
 // Raised when more or more arguments are outside the defined range of the function.
 // Defaults to boost::math::policies::domain_error<throw_on_error>
 // When the action is set to throw_on_error then throws std::domain_error
-fn raise_domain_error<R: std::fmt::Debug>(
-    function: &str,
-    message: &str,
-    val: R,
-    _policy: &ErrorPolicy,
-) {
+fn raise_domain_error(function: &str, message: &str, val: f64) {
     panic!("{}:{}:{:?}", function, message, val);
-    //FIXME: implement this logic, see: ./include/boost/math/policies/error_handling.hpp (boost)
-    //return val;
 }
 
-// FIXME: implement boost::math::isfinite
-fn isfinite<R>(_n: &R) -> bool {
+fn isfinite(_n: &f64) -> bool {
     true
 }
 
-// FIXME: this is dummy behaviour check how binomial.hpp Policy() works
-fn policy() -> ErrorPolicy {
-    ErrorPolicy::ThrowOnError
-}
-
-fn check_n<R: std::fmt::Debug + std::cmp::PartialOrd + FromPrimitive>(
-    function: &str,
-    n: R,
-    policy: &ErrorPolicy,
-) -> bool {
-    if (n < FromPrimitive::from_u64(0).unwrap()) || !isfinite(&n) {
+fn check_n(function: &str, n: f64) -> bool {
+    if n < 0.0 || !isfinite(&n) {
         raise_domain_error(
             function,
             "Number of Trials argument is %1%, but must be >= 0 !",
             n,
-            policy,
         );
         return false;
     }
     return true;
 }
 
-fn check_success_fraction<R: std::fmt::Debug + std::cmp::PartialOrd + FromPrimitive>(
-    function: &str,
-    p: R,
-    policy: &ErrorPolicy,
-) -> bool {
-    if p < FromPrimitive::from_u64(0).unwrap()
-        || p > FromPrimitive::from_u64(1).unwrap()
-        || !isfinite(&p)
-    {
+fn check_success_fraction(function: &str, p: f64) -> bool {
+    if p < 0.0 || p > 1.0 || !isfinite(&p) {
         raise_domain_error(
             function,
             "Success fraction argument is %1%, but must be >= 0 and <= 1 !",
             p,
-            policy,
         );
         return false;
     }
     return true;
 }
 
-fn check_dist<R: std::fmt::Debug + std::cmp::PartialOrd + FromPrimitive>(
-    function: &str,
-    n: R,
-    p: R,
-    policy: &ErrorPolicy,
-) -> bool {
-    check_success_fraction(function, p, policy) && check_n(function, n, policy)
+fn check_dist(function: &str, n: f64, p: f64) -> bool {
+    check_success_fraction(function, p) && check_n(function, n)
 }
 
-fn check_dist_and_k<R: Copy + std::fmt::Debug + std::cmp::PartialOrd + FromPrimitive>(
-    function: &str,
-    n: R,
-    p: R,
-    k: R,
-    policy: &ErrorPolicy,
-) -> bool {
-    if check_dist(function, n, p, policy) == false {
+fn check_dist_and_k(function: &str, n: f64, p: f64, k: f64) -> bool {
+    if check_dist(function, n, p) == false {
         return false;
     }
-    if k < FromPrimitive::from_u64(0).unwrap() || !isfinite(&k) {
+    if k < 0.0 || !isfinite(&k) {
         raise_domain_error(
             function,
             "Number of Successes argument is %1%, but must be >= 0 !",
             k,
-            policy,
         );
         return false;
     }
@@ -108,7 +57,6 @@ fn check_dist_and_k<R: Copy + std::fmt::Debug + std::cmp::PartialOrd + FromPrimi
             function,
             "Number of Successes argument is %1%, but must be <= Number of Trials !",
             k,
-            policy,
         );
         return false;
     }
@@ -131,21 +79,9 @@ fn check_dist_and_k<R: Copy + std::fmt::Debug + std::cmp::PartialOrd + FromPrimi
 /// according to the formula:
 /// P = I[1-p]( n-k, k+1).
 ///   = 1 - I[p](k + 1, n - k)
-pub fn cdf<
-    R: Copy
-        + std::fmt::Debug
-        + std::cmp::PartialOrd
-        + FromPrimitive
-        + ToPrimitive
-        + std::ops::Sub<Output = R>
-        + std::ops::Add<Output = R>,
->(
-    dist: &Binomial<R>,
-    k: R,
-) -> R {
-    //FIXME: dummy
-    let n: R = dist.trials();
-    let p: R = dist.success_fraction();
+pub fn cdf(dist: &Binomial, k: f64) -> f64 {
+    let n: f64 = dist.trials();
+    let p: f64 = dist.success_fraction();
 
     // Panics if something's wrong
     check_dist_and_k(
@@ -153,57 +89,38 @@ pub fn cdf<
         n,
         p,
         k,
-        &policy(),
     );
     if k == n {
-        return FromPrimitive::from_u64(1).unwrap();
+        return 1.0;
     }
-    if p == FromPrimitive::from_u64(0).unwrap() {
-        return FromPrimitive::from_u64(1).unwrap();
+    if p == 0.0 {
+        return 1.0;
     }
-    if p == FromPrimitive::from_u64(1).unwrap() {
-        return FromPrimitive::from_u64(0).unwrap();
+    if p == 1.0 {
+        return 0.0;
     }
 
-    let beta_res = beta_inc(
-        (k + FromPrimitive::from_u64(1).unwrap()).to_f64().unwrap(),
-        (n - k).to_f64().unwrap(),
-        p.to_f64().unwrap(),
-    );
-    return FromPrimitive::from_f64(beta_res).unwrap();
-    //return beta_inc(k + 1, n - k, p);
+    return beta_inc(k + 1.0, n - k, p);
 }
 
 #[derive(Debug)]
-pub struct Binomial<R>
-//where
-//R: std::fmt::Debug + std::cmp::PartialOrd + FromPrimitive,
-{
-    m_n: R, // FIXME: should be int?
-    m_p: R, // success_fraction
+pub struct Binomial {
+    m_n: f64, // FIXME: should be int?
+    m_p: f64, // success_fraction
 }
 
-impl<R> Binomial<R>
-where
-    R: Copy
-        + std::fmt::Debug
-        + std::cmp::PartialOrd
-        + FromPrimitive
-        + ToPrimitive
-        + std::ops::Sub<Output = R>
-        + std::ops::Add<Output = R>,
-{
-    pub fn new(n: R, p: R) -> Binomial<R> {
+impl Binomial {
+    pub fn new(n: f64, p: f64) -> Binomial {
         // Check will panic if checks fail
-        check_dist("binomial_distribution", n, p, &policy());
+        check_dist("binomial_distribution", n, p);
         Binomial { m_n: n, m_p: p }
     }
 
-    pub fn success_fraction(&self) -> R {
+    pub fn success_fraction(&self) -> f64 {
         self.m_p
     }
 
-    pub fn trials(&self) -> R {
+    pub fn trials(&self) -> f64 {
         self.m_n
     }
 }

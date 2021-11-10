@@ -42,7 +42,7 @@ pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: &[u8
 }
 
 pub fn sortition_binomial_cdf_walk(n: f64, p: f64, ratio: f64, money: u64) -> u64 {
-    let dist: Binomial<f64> = Binomial::new(n, p);
+    let dist: Binomial = Binomial::new(n, p);
     for j in 0..money {
         // Get the cdf
         let boundary: f64 = binomial::cdf(&dist, j as f64);
