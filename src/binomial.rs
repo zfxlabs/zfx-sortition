@@ -1,4 +1,4 @@
-use statrs::function::beta::beta_inc;
+use statrs::function::beta::beta_reg;
 
 // Equivalent of policies::raise_domain_error
 // Raised when more or more arguments are outside the defined range of the function.
@@ -93,5 +93,5 @@ pub fn cdf(n: f64, p: f64, k: f64) -> f64 {
         return 0.0;
     }
 
-    return beta_inc(k + 1.0, n - k, p);
+    return 1.0 - beta_reg(k + 1.0, n - k, p);
 }
