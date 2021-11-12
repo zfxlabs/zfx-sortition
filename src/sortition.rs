@@ -1,21 +1,7 @@
-//use std::collections::binary_heap;
-
+//extern crate test;
 use crate::binomial;
 use rug::integer::Order;
 use rug::{Float, Integer};
-//use sha2::Sha512;
-
-// FROM VRF GO CODE:
-// VrfOutput is a 64-byte pseudorandom value that can be computed from a VrfProof.
-// The VRF scheme guarantees that such output will be unique
-// VrfOutput [64]byte
-
-// FROM SORTITION GO CODE:
-// DigestSize is the number of bytes in the preferred hash Digest used here.
-//const DigestSize = sha512.Size256
-
-// Digest represents a 32-byte value holding the 256-bit Hash digest.
-//type Digest [DigestSize]byte
 
 /// select runs the sortition function and returns the number of time the key was selected
 pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: &[u8; 32]) -> u64 {
@@ -26,7 +12,6 @@ pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: &[u8
     let t: Integer = Integer::from_digits(&vrf_output[..], Order::Msf);
 
     let precision: u32 = (8 * (vrf_output.len() + 1)) as u32;
-
     let max_int = Integer::from_str_radix(
         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         16, // Ensure base is 16.
@@ -53,10 +38,24 @@ pub fn sortition_binomial_cdf_walk(n: f64, p: f64, ratio: f64, money: u64) -> u6
     return money;
 }
 
+pub fn add_two(n: usize) -> usize {
+    n + 2
+}
+
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use rand::Rng;
+    use serde::Deserialize;
+    use serde_json;
+    use std::fs;
+
+    #[derive(Deserialize, Debug)]
+    struct SelectTestCase {
+        vrf: [u8; 32],
+        selected: u64,
+    }
 
     #[test]
     fn test_sortition_basic() {
@@ -84,6 +83,35 @@ mod tests {
             );
         }
     }
+    #[test]
+    fn test_sortition_previously_failed_input() {
+        test_sortition_fixed_input("./src/failed01.json");
+    }
+
+    fn test_sortition_fixed_input(filename: &str) {
+        let data = fs::read_to_string(filename).expect("Unable to read file");
+        let testcases: Vec<SelectTestCase> = serde_json::from_str(&data).expect("Unable to parse");
+
+        for tc in testcases {
+            test_sortition_single_fixed_input(tc);
+        }
+    }
+
+    fn test_sortition_single_fixed_input(t: SelectTestCase) {
+        const EXPECTED_SIZE: u64 = 20;
+        const MY_MONEY: u64 = 100;
+        const TOTAL_MONEY: u64 = 200;
+
+        let selected = select(MY_MONEY, TOTAL_MONEY, EXPECTED_SIZE as f64, &t.vrf);
+        assert_eq!(selected, t.selected);
+    }
+    // #[bench]
+    // fn bench_add_two(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         let vrf_output = rand::thread_rng().gen::<[u8; 32]>();
+    //         select(1000000, 1000000000000, 2500.0, &vrf_output);
+    //     });
+    // }
 }
 
 // func BenchmarkSortition(b *testing.B) {
