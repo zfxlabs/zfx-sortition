@@ -87,6 +87,20 @@ mod tests {
     fn test_sortition_previously_failed_input() {
         test_sortition_fixed_input("./src/failed01.json");
     }
+    #[test]
+    fn test_sortition_previously_failed_input_2() {
+        test_sortition_fixed_input("./src/failed02.json");
+    }
+
+    #[test]
+    fn test_sortition_single_select() {
+        const EXPECTED_SIZE: u64 = 20;
+        const MY_MONEY: u64 = 100;
+        const TOTAL_MONEY: u64 = 200;
+        let vrf_output = b"12345678901234567890123456789012";
+        let selected = select(MY_MONEY, TOTAL_MONEY, EXPECTED_SIZE as f64, &vrf_output);
+        assert_eq!(7, selected);
+    }
 
     fn test_sortition_fixed_input(filename: &str) {
         let data = fs::read_to_string(filename).expect("Unable to read file");
@@ -101,7 +115,6 @@ mod tests {
         const EXPECTED_SIZE: u64 = 20;
         const MY_MONEY: u64 = 100;
         const TOTAL_MONEY: u64 = 200;
-
         let selected = select(MY_MONEY, TOTAL_MONEY, EXPECTED_SIZE as f64, &t.vrf);
         assert_eq!(selected, t.selected);
     }
