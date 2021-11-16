@@ -25,7 +25,7 @@ pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: &[u8
     return sortition_binomial_cdf_walk(binomial_n, binomial_p, cratio, money);
 }
 
-pub fn sortition_binomial_cdf_walk(n: f64, p: f64, ratio: f64, money: u64) -> u64 {
+fn sortition_binomial_cdf_walk(n: f64, p: f64, ratio: f64, money: u64) -> u64 {
     for j in 0..money {
         // Get the cdf
         let boundary: f64 = binomial::cdf(n, p, j as f64);
@@ -36,10 +36,6 @@ pub fn sortition_binomial_cdf_walk(n: f64, p: f64, ratio: f64, money: u64) -> u6
         }
     }
     return money;
-}
-
-pub fn add_two(n: usize) -> usize {
-    n + 2
 }
 
 #[cfg(test)]
@@ -118,50 +114,4 @@ mod tests {
         let selected = select(MY_MONEY, TOTAL_MONEY, EXPECTED_SIZE as f64, &t.vrf);
         assert_eq!(selected, t.selected);
     }
-    // #[bench]
-    // fn bench_add_two(b: &mut Bencher) {
-    //     b.iter(|| {
-    //         let vrf_output = rand::thread_rng().gen::<[u8; 32]>();
-    //         select(1000000, 1000000000000, 2500.0, &vrf_output);
-    //     });
-    // }
 }
-
-// func BenchmarkSortition(b *testing.B) {
-//     b.StopTimer()
-//     keys := make([]crypto.Digest, b.N)
-//     for i := 0; i < b.N; i++ {
-//         rand.Read(keys[i][:])
-//     }
-//     b.StartTimer()
-//     for i := 0; i < b.N; i++ {
-//         Select(1000000, 1000000000000, 2500, keys[i])
-//     }
-// }
-
-// func TestSortitionBasic(t *testing.T) {
-//     partitiontest.PartitionTest(t)
-//     hitcount := uint64(0)
-//     const N = 1000
-//     const expectedSize = 20
-//     const myMoney = 100
-//     const totalMoney = 200
-//     for i := 0; i < N; i++ {
-//         var vrfOutput crypto.Digest
-//         rand.Read(vrfOutput[:])
-//         selected := Select(myMoney, totalMoney, expectedSize, vrfOutput)
-//         hitcount += selected
-//     }
-//     expected := uint64(N * expectedSize / 2)
-//     var d uint64
-//     if expected > hitcount {
-//         d = expected - hitcount
-//     } else {
-//         d = hitcount - expected
-//     }
-//     // within 2% good enough
-//     maxd := expected / 50
-//     if d > maxd {
-//         t.Errorf("wanted %d selections but got %d, d=%d, maxd=%d", expected, hitcount, d, maxd)
-//     }
-// }
