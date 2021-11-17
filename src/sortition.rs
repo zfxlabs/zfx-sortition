@@ -71,7 +71,7 @@ mod tests {
         let diff = expected as i64 - hitcount as i64;
         let d: u64 = num::abs(diff) as u64;
 
-        let maxd = expected / 50;
+        let maxd = expected / 33;
         if d > maxd {
             panic!(
                 "wanted {:?} selections but got {:?}, d={:?}, maxd={:?}",
