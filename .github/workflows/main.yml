@@ -46,7 +46,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-      - uses: katyo/publish-crates@v1
-        with:
-          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+# Enable when ready to be published to crate.io
+#      - uses: katyo/publish-crates@v1
+#        with:
+#          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
