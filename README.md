@@ -1,5 +1,14 @@
 # zfx-sortition
 
+[comment]: <> (Enable when ready to be published to crate.io )
+[comment]: <> ([![Crates.io][crates-badge]][crates-url])
+[![Build Status][actions-badge]][actions-url]
+
+[crates-badge]: https://img.shields.io/crates/v/zfx-sortition
+[crates-url]: https://crates.io/crates/zfx-sortition
+[actions-badge]: https://github.com/zfxlabs/zfx-sortition/actions/workflows/main.yml/badge.svg?
+[actions-url]: https://github.com/zfxlabs/zfx-sortition/actions?branch=master
+
 Cryptograhic sortition library in Rust.
 
 ## Building
