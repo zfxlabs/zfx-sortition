@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: ['**']
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - { name: Ubuntu, os: ubuntu-latest }
+        version:
+          - 1.56.0
+
+    name: Build and test ZFX Sortition on ${{ matrix.target.name }}
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        run: rustup update stable
+
+      - name: Use toolchain for version ${{ matrix.version }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.version }}
+          override: true
+          profile: minimal
+          default: true
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v1.2.0
+
+      - name: Build components
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: Run unit tests
+        if: success()
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+# Enable when ready to be published to crate.io
+#      - uses: katyo/publish-crates@v1
+#        with:
+#          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
